@@ -8,8 +8,11 @@ declare global {
   }
 }
 
+import styles from "./page.module.css";
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState("case1");
+  console.log("activeTab", activeTab);
   const [sprintStatus, setSprintStatus] = useState("active");
   const [bugPathResult, setBugPathResult] = useState<React.ReactNode | null>(
     null
@@ -41,28 +44,19 @@ export default function Home() {
     if (sprintStatus === "active") {
       setBugPathResult(
         <div className="result-card result-safe" style={{ display: "block" }}>
-          <div
-            className="result-title"
-            style={{ color: "var(--primary-blue-dark)" }}
-          >
+          <div className="result-title" style={{ color: "var(--success)" }}>
             <span>🛠️</span> Acción: Flujo Estándar
           </div>
           <div className="result-details">
             <div className="detail-box">
               <div className="detail-label">Rama Origen</div>
-              <div
-                className="detail-value"
-                style={{ color: "var(--primary-blue)" }}
-              >
+              <div className="detail-value" style={{ color: "var(--primary)" }}>
                 develop
               </div>
             </div>
             <div className="detail-box">
               <div className="detail-label">Rama Destino (Merge)</div>
-              <div
-                className="detail-value"
-                style={{ color: "var(--primary-blue)" }}
-              >
+              <div className="detail-value" style={{ color: "var(--primary)" }}>
                 develop
               </div>
             </div>
@@ -76,7 +70,7 @@ export default function Home() {
     } else {
       setBugPathResult(
         <div className="result-card result-alert" style={{ display: "block" }}>
-          <div className="result-title" style={{ color: "var(--alert-red)" }}>
+          <div className="result-title" style={{ color: "var(--danger)" }}>
             <span>🚨</span> Acción: Flujo de Hotfix / Release
           </div>
           <div className="result-details">
@@ -95,7 +89,7 @@ export default function Home() {
               background: "white",
               padding: "1rem",
               borderRadius: "6px",
-              border: "1px dashed var(--alert-red)",
+              border: "1px dashed var(--danger)",
             }}
           >
             <strong>⚠️ CRÍTICO: BACK-MERGE REQUERIDO</strong>
@@ -116,6 +110,16 @@ export default function Home() {
           Documentación viva y herramientas de decisión para el equipo de
           desarrollo
         </p>
+        <div style={{ marginTop: "1rem" }}>
+          <a
+            href="/quiz"
+            className={styles.quizButton}
+            style={{ textDecoration: "none" }}
+          >
+            <span>📝</span>
+            <span style={{ marginLeft: "0.5rem" }}>Validar Conocimientos</span>
+          </a>
+        </div>
       </header>
 
       <section id="definitions">
@@ -314,76 +318,80 @@ export default function Home() {
             Caso 2: Bug Sprint Anterior/Release
           </button>
         </div>
-
-        <div
-          id="case1"
-          className={`tab-content ${activeTab === "case1" ? "active" : ""}`}
-        >
-          <div className="example-box">
-            <h3>Escenario:</h3>
-            <p>
-              Estamos a mitad del Sprint 15. QA encuentra un error en el Login.
-            </p>
-            <hr
-              style={{
-                margin: "1rem 0",
-                border: 0,
-                borderTop: "1px solid #ccc",
-              }}
-            />
-            <p>
-              <strong>Procedimiento:</strong>
-            </p>
-            <ol style={{ marginLeft: "1.5rem" }}>
-              <li>
-                El desarrollador crea rama <code>fix/login-error</code> desde{" "}
-                <strong>develop</strong>.
-              </li>
-              <li>Corrige el error.</li>
-              <li>
-                PR y Merge hacia <strong>develop</strong>.
-              </li>
-              <li>Se genera nuevo Tag para QA.</li>
-            </ol>
+        {activeTab === "case1" && (
+          <div
+            id="case1"
+            className={`tab-content ${activeTab === "case1" ? "active" : ""}`}
+          >
+            <div className="example-box">
+              <h3>Escenario:</h3>
+              <p>
+                Estamos a mitad del Sprint 15. QA encuentra un error en el
+                Login.
+              </p>
+              <hr
+                style={{
+                  margin: "1rem 0",
+                  border: 0,
+                  borderTop: "1px solid #ccc",
+                }}
+              />
+              <p>
+                <strong>Procedimiento:</strong>
+              </p>
+              <ol style={{ marginLeft: "1.5rem" }}>
+                <li>
+                  El desarrollador crea rama <code>fix/login-error</code> desde{" "}
+                  <strong>develop</strong>.
+                </li>
+                <li>Corrige el error.</li>
+                <li>
+                  PR y Merge hacia <strong>develop</strong>.
+                </li>
+                <li>Se genera nuevo Tag para QA.</li>
+              </ol>
+            </div>
           </div>
-        </div>
+        )}
 
-        <div
-          id="case2"
-          className={`tab-content ${activeTab === "case2" ? "active" : ""}`}
-        >
-          <div className="example-box">
-            <h3>Escenario:</h3>
-            <p>
-              El código del Sprint 15 se cerró ayer. Existe la rama{" "}
-              <code>release/sprint-15</code>. QA encuentra un error crítico.
-            </p>
-            <hr
-              style={{
-                margin: "1rem 0",
-                border: 0,
-                borderTop: "1px solid #ccc",
-              }}
-            />
-            <p>
-              <strong>Procedimiento:</strong>
-            </p>
-            <ol style={{ marginLeft: "1.5rem" }}>
-              <li>
-                El desarrollador crea rama <code>fix/critical-error</code> desde{" "}
-                <strong>release/sprint-15</strong>.
-              </li>
-              <li>Corrige el error.</li>
-              <li>
-                PR y Merge hacia <strong>release/sprint-15</strong>.
-              </li>
-              <li style={{ color: "var(--alert-red)", fontWeight: "bold" }}>
-                IMPORTANTE: Realizar Back-merge de los cambios hacia develop
-                para no perder el fix en el futuro.
-              </li>
-            </ol>
+        {activeTab === "case2" && (
+          <div
+            id="case2"
+            className={`tab-content ${activeTab === "case2" ? "active" : ""}`}
+          >
+            <div className="example-box">
+              <h3>Escenario:</h3>
+              <p>
+                El código del Sprint 15 se cerró ayer. Existe la rama{" "}
+                <code>release/sprint-15</code>. QA encuentra un error crítico.
+              </p>
+              <hr
+                style={{
+                  margin: "1rem 0",
+                  border: 0,
+                  borderTop: "1px solid #ccc",
+                }}
+              />
+              <p>
+                <strong>Procedimiento:</strong>
+              </p>
+              <ol style={{ marginLeft: "1.5rem" }}>
+                <li>
+                  El desarrollador crea rama <code>fix/critical-error</code>{" "}
+                  desde <strong>release/sprint-15</strong>.
+                </li>
+                <li>Corrige el error.</li>
+                <li>
+                  PR y Merge hacia <strong>release/sprint-15</strong>.
+                </li>
+                <li style={{ color: "var(--danger)", fontWeight: "bold" }}>
+                  IMPORTANTE: Realizar Back-merge de los cambios hacia develop
+                  para no perder el fix en el futuro.
+                </li>
+              </ol>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </div>
   );
