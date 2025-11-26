@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva: Flujo de Releases y Gestión de Bugs</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            /* Paleta de Colores */
+            --primary-blue: #2563eb; /* Develop */
+            --primary-blue-dark: #1e40af;
+            --secondary-green: #10b981; /* Release/Done */
+            --alert-red: #ef4444; /* Bugs */
+            --bg-light: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-blue-dark);
+            border-left: 5px solid var(--primary-blue);
+            padding-left: 1rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Secciones */
+        section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        /* A. Accordions (Definiciones) */
+        .accordion-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+        }
+
+        .accordion-header {
+            background: #fff;
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: var(--bg-light);
+        }
+
+        .accordion-header::after {
+            content: '+';
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .accordion-item.active .accordion-header::after {
+            content: '-';
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: var(--bg-light);
+            padding: 0 1rem;
+        }
+
+        .accordion-item.active .accordion-content {
+            padding: 1rem;
+            max-height: 500px; /* Altura arbitraria suficiente */
+            border-top: 1px solid var(--border);
+        }
+
+        /* B. Mermaid Container */
+        .mermaid-container {
+            display: flex;
+            justify-content: center;
+            background: #fff;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        /* C. Bug Decider Tool */
+        .decider-form {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary-blue);
+            background: #eff6ff;
+        }
+
+        input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: var(--primary-blue);
+        }
+
+        .btn-calculate {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .btn-calculate:hover {
+            background: var(--primary-blue-dark);
+        }
+
+        #result-container {
+            display: none; /* Oculto por defecto */
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-card {
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 6px solid;
+        }
+
+        .result-safe {
+            background: #eff6ff;
+            border-color: var(--primary-blue);
+        }
+
+        .result-alert {
+            background: #fef2f2;
+            border-color: var(--alert-red);
+        }
+
+        .result-title {
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .detail-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .detail-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* D. Tabs (Ejemplos) */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-blue);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-blue);
+            border-bottom-color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .example-box {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--secondary-green);
+        }
+
+        /* Utilidades */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        .bg-dev { background: #dbeafe; color: #1e40af; }
+        .bg-rel { background: #d1fae5; color: #065f46; }
+        .bg-bug { background: #fee2e2; color: #991b1b; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            .result-details {
+                grid-template-columns: 1fr;
+            }
+            .radio-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Guía de Flujo & Gestión de Bugs</h1>
+            <p class="subtitle">Documentación viva y herramientas de decisión para el equipo de desarrollo</p>
+        </header>
+
+        <section id="definitions">
+            <h2>1. Definiciones y Convenciones</h2>
+            <p style="margin-bottom: 1rem;">Conceptos clave para entender el flujo de trabajo.</p>
+            
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">Ramas Principales</div>
+                    <div class="accordion-content">
+                        <p><strong><span class="badge bg-dev">Develop</span></strong>: Rama de integración continua. Aquí vive el código del sprint actual. Todo feature debe nacer y morir aquí durante el desarrollo.</p>
+                        <br>
+                        <p><strong><span class="badge bg-rel">Release/Sprint-N</span></strong>: Rama congelada para QA final antes de producción. Se crea al cerrar el código del Sprint. Solo admite Bug Fixes.</p>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">Columnas del Tablero Hub/Marketplace</div>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>To Do:</strong> Tareas pendientes.</li>
+                            <li><strong>In Progress:</strong> Desarrollo activo.</li>
+                            <li><strong>Review:</strong>Desarrollo mergeado en Develop y Tag asignado..</li>
+                            <li><strong>QA:</strong>Tarea en certificación por QA </li>
+                            <li><strong>Done:</strong> QA Aprobado y libre de bugs.</li>
+                        </ul>
+                    </div>
+                </div>
+                  <div class="accordion-item">
+                    <div class="accordion-header">Columnas del Tablero Altio</div>
+                    <div class="accordion-content">
+                        <ul>
+                            <li><strong>To Do:</strong> Tareas pendientes.</li>
+                            <li><strong>In Progress:</strong> Desarrollo activo.</li>
+                            <li><strong>IN QA:</strong>Desarrollo mergeado en Develop.</li>
+                            <li><strong>UAT:</strong> Tarea en certificación por QA.</li>
+                            <li><strong>Done:</strong> QA Aprobado y libre de bugs.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">Tags y Nomenclatura</div>
+                    <div class="accordion-content">
+                        <p>El uso de <strong>Tags</strong> es obligatorio para marcar entregables a QA.</p>
+                        <p>Formato: <code>Semana 48 y 49 2025 - R6</code> (ej. R6)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="flow-diagram">
+            <h2>2. Visualizador de Flujo</h2>
+            <p style="margin-bottom: 1rem;">Diagrama lógico de ciclo de vida de una tarea y gestión de defectos.</p>
+            
+            <div class="mermaid-container">
+                <div class="mermaid">
+                graph TD
+                    Start([Inicio Tarea]) --> Dev[Desarrollo]
+                    Dev --> PR[Pull Request]
+                    PR --> MergeDev[Merge a Develop]
+                    MergeDev --> Tag[Asignar Tag]
+                    Tag --> QA[QA Testing]
+                    
+                    QA --> Decision{¿Hay Bugs?}
+                    Decision -- No --> Done([Done / Aprobado])
+                    
+                    Decision -- Sí --> Bug[Crear Ticket Bug]
+                    Bug --> CheckSprint{¿Sprint Cerrado?<br>Existe Release Branch?}
+                    
+                    CheckSprint -- No <br>(Sprint en Curso) --> FixDev[Fix en Develop]
+                    FixDev --> MergeDev
+                    
+                    CheckSprint -- Sí <br>(Sprint Cerrado) --> FixRel[Fix en Release Branch]
+                    FixRel --> QA2[QA Retest]
+                    QA2 --> MergeRel[Merge a Release]
+                    MergeRel --> BackMerge[CRÍTICO: Back-merge a Develop]
+                    BackMerge --> Done
+                </div>
+            </div>
+        </section>
+
+        <section id="bug-decider">
+            <h2>3. El Decisor de Bugs</h2>
+            <p style="margin-bottom: 1.5rem;">Responde las preguntas para calcular la ruta de corrección exacta.</p>
+
+            <div class="decider-form">
+                <div class="form-group">
+                    <label>¿Cuál es el estado del Sprint asociado al Tag con error?</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="sprintStatus" value="active" checked>
+                            <span>En Curso / No existe rama Release</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="sprintStatus" value="closed">
+                            <span>Cerrado / Existe rama Release (Code Freeze)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="btn-calculate" onclick="calculateBugPath()">Calcular Ruta de Corrección</button>
+            </div>
+
+            <div id="result-container">
+                </div>
+        </section>
+
+        <section id="examples">
+            <h2>4. Ejemplos Prácticos</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'case1')">Caso 1: Bug Sprint Actual</button>
+                <button class="tab-btn" onclick="openTab(event, 'case2')">Caso 2: Bug Sprint Anterior/Release</button>
+            </div>
+
+            <div id="case1" class="tab-content active">
+                <div class="example-box">
+                    <h3>Escenario:</h3>
+                    <p>Estamos a mitad del Sprint 15. QA encuentra un error en el Login.</p>
+                    <hr style="margin: 1rem 0; border:0; border-top:1px solid #ccc;">
+                    <p><strong>Procedimiento:</strong></p>
+                    <ol style="margin-left: 1.5rem;">
+                        <li>El desarrollador crea rama <code>fix/login-error</code> desde <strong>develop</strong>.</li>
+                        <li>Corrige el error.</li>
+                        <li>PR y Merge hacia <strong>develop</strong>.</li>
+                        <li>Se genera nuevo Tag para QA.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div id="case2" class="tab-content">
+                <div class="example-box">
+                    <h3>Escenario:</h3>
+                    <p>El código del Sprint 15 se cerró ayer. Existe la rama <code>release/sprint-15</code>. QA encuentra un error crítico.</p>
+                    <hr style="margin: 1rem 0; border:0; border-top:1px solid #ccc;">
+                    <p><strong>Procedimiento:</strong></p>
+                    <ol style="margin-left: 1.5rem;">
+                        <li>El desarrollador crea rama <code>fix/critical-error</code> desde <strong>release/sprint-15</strong>.</li>
+                        <li>Corrige el error.</li>
+                        <li>PR y Merge hacia <strong>release/sprint-15</strong>.</li>
+                        <li style="color: var(--alert-red); font-weight: bold;">IMPORTANTE: Realizar Back-merge de los cambios hacia develop para no perder el fix en el futuro.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 1. Inicializar Mermaid
+        document.addEventListener('DOMContentLoaded', function() {
+            mermaid.initialize({ startOnLoad: true, theme: 'neutral' });
+        });
+
+        // 2. Lógica de Acordeones
+        const accordions = document.querySelectorAll('.accordion-item');
+        accordions.forEach(acc => {
+            acc.querySelector('.accordion-header').addEventListener('click', () => {
+                acc.classList.toggle('active');
+            });
+        });
+
+        // 3. Lógica de Tabs
+        function openTab(evt, tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tc => tc.classList.remove('active'));
+
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // 4. Lógica del "Decisor de Bugs"
+        function calculateBugPath() {
+            const status = document.querySelector('input[name="sprintStatus"]:checked').value;
+            const container = document.getElementById('result-container');
+            
+            let htmlContent = '';
+
+            if (status === 'active') {
+                htmlContent = `
+                    <div class="result-card result-safe">
+                        <div class="result-title" style="color: var(--primary-blue-dark)">
+                            <span>🛠️</span> Acción: Flujo Estándar
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-box">
+                                <div class="detail-label">Rama Origen</div>
+                                <div class="detail-value" style="color: var(--primary-blue)">develop</div>
+                            </div>
+                            <div class="detail-box">
+                                <div class="detail-label">Rama Destino (Merge)</div>
+                                <div class="detail-value" style="color: var(--primary-blue)">develop</div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 0.9rem;">
+                            El sprint está activo. Simplemente corrige y actualiza la rama de desarrollo principal.
+                        </p>
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <div class="result-card result-alert">
+                        <div class="result-title" style="color: var(--alert-red)">
+                            <span>🚨</span> Acción: Flujo de Hotfix / Release
+                        </div>
+                        <div class="result-details">
+                            <div class="detail-box">
+                                <div class="detail-label">Rama Origen</div>
+                                <div class="detail-value">release/sprint-N</div>
+                            </div>
+                            <div class="detail-box">
+                                <div class="detail-label">Rama Destino (Merge)</div>
+                                <div class="detail-value">release/sprint-N</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 1rem; background: white; padding: 1rem; border-radius: 6px; border: 1px dashed var(--alert-red);">
+                            <strong>⚠️ CRÍTICO: BACK-MERGE REQUERIDO</strong><br>
+                            Una vez mergeado a Release, DEBES mergear esos cambios también a <code>develop</code> manualmente.
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = htmlContent;
+            container.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
