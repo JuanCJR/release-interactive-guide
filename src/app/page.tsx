@@ -1,65 +1,390 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+
+declare global {
+  interface Window {
+    mermaid: any;
+  }
+}
 
 export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+  const [activeTab, setActiveTab] = useState("case1");
+  const [sprintStatus, setSprintStatus] = useState("active");
+  const [bugPathResult, setBugPathResult] = useState<React.ReactNode | null>(
+    null
+  );
+
+  useEffect(() => {
+    // Initialize Mermaid
+    if (window.mermaid) {
+      window.mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    } else {
+      const interval = setInterval(() => {
+        if (window.mermaid) {
+          window.mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+          clearInterval(interval);
+        }
+      }, 100);
+    }
+  }, []);
+
+  const toggleAccordion = (e: React.MouseEvent<HTMLDivElement>) => {
+    const header = e.currentTarget;
+    const item = header.parentElement;
+    if (item) {
+      item.classList.toggle("active");
+    }
+  };
+
+  const calculateBugPath = () => {
+    if (sprintStatus === "active") {
+      setBugPathResult(
+        <div className="result-card result-safe" style={{ display: "block" }}>
+          <div
+            className="result-title"
+            style={{ color: "var(--primary-blue-dark)" }}
+          >
+            <span>🛠️</span> Acción: Flujo Estándar
+          </div>
+          <div className="result-details">
+            <div className="detail-box">
+              <div className="detail-label">Rama Origen</div>
+              <div
+                className="detail-value"
+                style={{ color: "var(--primary-blue)" }}
+              >
+                develop
+              </div>
+            </div>
+            <div className="detail-box">
+              <div className="detail-label">Rama Destino (Merge)</div>
+              <div
+                className="detail-value"
+                style={{ color: "var(--primary-blue)" }}
+              >
+                develop
+              </div>
+            </div>
+          </div>
+          <p style={{ marginTop: "1rem", fontSize: "0.9rem" }}>
+            El sprint está activo. Simplemente corrige y actualiza la rama de
+            desarrollo principal.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      );
+    } else {
+      setBugPathResult(
+        <div className="result-card result-alert" style={{ display: "block" }}>
+          <div className="result-title" style={{ color: "var(--alert-red)" }}>
+            <span>🚨</span> Acción: Flujo de Hotfix / Release
+          </div>
+          <div className="result-details">
+            <div className="detail-box">
+              <div className="detail-label">Rama Origen</div>
+              <div className="detail-value">release/sprint-N</div>
+            </div>
+            <div className="detail-box">
+              <div className="detail-label">Rama Destino (Merge)</div>
+              <div className="detail-value">release/sprint-N</div>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: "1rem",
+              background: "white",
+              padding: "1rem",
+              borderRadius: "6px",
+              border: "1px dashed var(--alert-red)",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <strong>⚠️ CRÍTICO: BACK-MERGE REQUERIDO</strong>
+            <br />
+            Una vez mergeado a Release, DEBES mergear esos cambios también a{" "}
+            <code>develop</code> manualmente.
+          </div>
         </div>
-      </main>
+      );
+    }
+  };
+
+  return (
+    <div className="container">
+      <header>
+        <h1>Guía de Flujo & Gestión de Bugs</h1>
+        <p className="subtitle">
+          Documentación viva y herramientas de decisión para el equipo de
+          desarrollo
+        </p>
+      </header>
+
+      <section id="definitions">
+        <h2>1. Definiciones y Convenciones</h2>
+        <p style={{ marginBottom: "1rem" }}>
+          Conceptos clave para entender el flujo de trabajo.
+        </p>
+
+        <div className="accordion">
+          <div className="accordion-item">
+            <div className="accordion-header" onClick={toggleAccordion}>
+              Ramas Principales
+            </div>
+            <div className="accordion-content">
+              <p>
+                <strong>
+                  <span className="badge bg-dev">Develop</span>
+                </strong>
+                : Rama de integración continua. Aquí vive el código del sprint
+                actual. Todo feature debe nacer y morir aquí durante el
+                desarrollo.
+              </p>
+              <br />
+              <p>
+                <strong>
+                  <span className="badge bg-rel">Release/Sprint-N</span>
+                </strong>
+                : Rama congelada para QA final antes de producción. Se crea al
+                cerrar el código del Sprint. Solo admite Bug Fixes.
+              </p>
+            </div>
+          </div>
+          <div className="accordion-item">
+            <div className="accordion-header" onClick={toggleAccordion}>
+              Columnas del Tablero Hub/Marketplace
+            </div>
+            <div className="accordion-content">
+              <ul>
+                <li>
+                  <strong>To Do:</strong> Tareas pendientes.
+                </li>
+                <li>
+                  <strong>In Progress:</strong> Desarrollo activo.
+                </li>
+                <li>
+                  <strong>Review:</strong>Desarrollo mergeado en Develop y Tag
+                  asignado..
+                </li>
+                <li>
+                  <strong>QA:</strong>Tarea en certificación por QA{" "}
+                </li>
+                <li>
+                  <strong>Done:</strong> QA Aprobado y libre de bugs.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="accordion-item">
+            <div className="accordion-header" onClick={toggleAccordion}>
+              Columnas del Tablero Altio
+            </div>
+            <div className="accordion-content">
+              <ul>
+                <li>
+                  <strong>To Do:</strong> Tareas pendientes.
+                </li>
+                <li>
+                  <strong>In Progress:</strong> Desarrollo activo.
+                </li>
+                <li>
+                  <strong>IN QA:</strong>Desarrollo mergeado en Develop.
+                </li>
+                <li>
+                  <strong>UAT:</strong> Tarea en certificación por QA.
+                </li>
+                <li>
+                  <strong>Done:</strong> QA Aprobado y libre de bugs.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="accordion-item">
+            <div className="accordion-header" onClick={toggleAccordion}>
+              Tags y Nomenclatura
+            </div>
+            <div className="accordion-content">
+              <p>
+                El uso de <strong>Tags</strong> es obligatorio para marcar
+                entregables a QA.
+              </p>
+              <p>
+                Formato: <code>Semana 48 y 49 2025 - R6</code> (ej. R6)
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="flow-diagram">
+        <h2>2. Visualizador de Flujo</h2>
+        <p style={{ marginBottom: "1rem" }}>
+          Diagrama lógico de ciclo de vida de una tarea y gestión de defectos.
+        </p>
+
+        <div className="mermaid-container">
+          <div className="mermaid">
+            {`
+            graph TD
+                Start([Inicio Tarea]) --> Dev[Desarrollo]
+                Dev --> PR[Pull Request]
+                PR --> MergeDev[Merge a Develop]
+                MergeDev --> Tag[Asignar Tag]
+                Tag --> QA[QA Testing]
+                
+                QA --> Decision{¿Hay Bugs?}
+                Decision -- No --> Done([Done / Aprobado])
+                
+                Decision -- Sí --> Bug[Crear Ticket Bug]
+                Bug --> CheckSprint{¿Sprint Cerrado?<br>Existe Release Branch?}
+                
+                CheckSprint -- No <br>(Sprint en Curso) --> FixDev[Fix en Develop]
+                FixDev --> MergeDev
+                
+                CheckSprint -- Sí <br>(Sprint Cerrado) --> FixRel[Fix en Release Branch]
+                FixRel --> QA2[QA Retest]
+                QA2 --> MergeRel[Merge a Release]
+                MergeRel --> BackMerge[CRÍTICO: Back-merge a Develop]
+                BackMerge --> Done
+            `}
+          </div>
+        </div>
+      </section>
+
+      <section id="bug-decider">
+        <h2>3. El Decisor de Bugs</h2>
+        <p style={{ marginBottom: "1.5rem" }}>
+          Responde las preguntas para calcular la ruta de corrección exacta.
+        </p>
+
+        <div className="decider-form">
+          <div className="form-group">
+            <label>
+              ¿Cuál es el estado del Sprint asociado al Tag con error?
+            </label>
+            <div className="radio-group">
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="sprintStatus"
+                  value="active"
+                  checked={sprintStatus === "active"}
+                  onChange={() => setSprintStatus("active")}
+                />
+                <span>En Curso / No existe rama Release</span>
+              </label>
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="sprintStatus"
+                  value="closed"
+                  checked={sprintStatus === "closed"}
+                  onChange={() => setSprintStatus("closed")}
+                />
+                <span>Cerrado / Existe rama Release (Code Freeze)</span>
+              </label>
+            </div>
+          </div>
+
+          <button className="btn-calculate" onClick={calculateBugPath}>
+            Calcular Ruta de Corrección
+          </button>
+        </div>
+
+        <div
+          id="result-container"
+          style={{ display: bugPathResult ? "block" : "none" }}
+        >
+          {bugPathResult}
+        </div>
+      </section>
+
+      <section id="examples">
+        <h2>4. Ejemplos Prácticos</h2>
+
+        <div className="tabs">
+          <button
+            className={`tab-btn ${activeTab === "case1" ? "active" : ""}`}
+            onClick={() => setActiveTab("case1")}
+          >
+            Caso 1: Bug Sprint Actual
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "case2" ? "active" : ""}`}
+            onClick={() => setActiveTab("case2")}
+          >
+            Caso 2: Bug Sprint Anterior/Release
+          </button>
+        </div>
+
+        <div
+          id="case1"
+          className={`tab-content ${activeTab === "case1" ? "active" : ""}`}
+        >
+          <div className="example-box">
+            <h3>Escenario:</h3>
+            <p>
+              Estamos a mitad del Sprint 15. QA encuentra un error en el Login.
+            </p>
+            <hr
+              style={{
+                margin: "1rem 0",
+                border: 0,
+                borderTop: "1px solid #ccc",
+              }}
+            />
+            <p>
+              <strong>Procedimiento:</strong>
+            </p>
+            <ol style={{ marginLeft: "1.5rem" }}>
+              <li>
+                El desarrollador crea rama <code>fix/login-error</code> desde{" "}
+                <strong>develop</strong>.
+              </li>
+              <li>Corrige el error.</li>
+              <li>
+                PR y Merge hacia <strong>develop</strong>.
+              </li>
+              <li>Se genera nuevo Tag para QA.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div
+          id="case2"
+          className={`tab-content ${activeTab === "case2" ? "active" : ""}`}
+        >
+          <div className="example-box">
+            <h3>Escenario:</h3>
+            <p>
+              El código del Sprint 15 se cerró ayer. Existe la rama{" "}
+              <code>release/sprint-15</code>. QA encuentra un error crítico.
+            </p>
+            <hr
+              style={{
+                margin: "1rem 0",
+                border: 0,
+                borderTop: "1px solid #ccc",
+              }}
+            />
+            <p>
+              <strong>Procedimiento:</strong>
+            </p>
+            <ol style={{ marginLeft: "1.5rem" }}>
+              <li>
+                El desarrollador crea rama <code>fix/critical-error</code> desde{" "}
+                <strong>release/sprint-15</strong>.
+              </li>
+              <li>Corrige el error.</li>
+              <li>
+                PR y Merge hacia <strong>release/sprint-15</strong>.
+              </li>
+              <li style={{ color: "var(--alert-red)", fontWeight: "bold" }}>
+                IMPORTANTE: Realizar Back-merge de los cambios hacia develop
+                para no perder el fix en el futuro.
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
